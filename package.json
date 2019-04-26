@@ -1,0 +1,36 @@
+{
+  "name": "s3surgeon",
+  "version": "0.0.1",
+  "description": "Sync your files to AWS S3 with surgical precision.",
+  "main": "index.js",
+  "bin": {
+    "s3surgeon": "bin/s3surgeon.js"
+  },
+  "scripts": {
+    "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "build": "tsc -p .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neoskop/s3surgeon.git"
+  },
+  "author": "Arne Diekmann <diekmann@neoskop.de>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/neoskop/s3surgeon/issues"
+  },
+  "homepage": "https://github.com/neoskop/s3surgeon#readme",
+  "dependencies": {
+    "aws-sdk": "2.443.0",
+    "commander": "2.20.0",
+    "mime-types": "^2.1.24"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^2.1.0",
+    "@types/node": "11.13.7",
+    "nodemon": "1.18.11",
+    "ts-node": "8.1.0",
+    "typescript": "3.4.5"
+  }
+}
