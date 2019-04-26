@@ -4,7 +4,7 @@
   "description": "Sync your files to AWS S3 with surgical precision.",
   "main": "index.js",
   "bin": {
-    "s3surgeon": "bin/s3surgeon.js"
+    "s3surgeon": "lib/index.js"
   },
   "scripts": {
     "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
