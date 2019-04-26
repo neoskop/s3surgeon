@@ -66,7 +66,7 @@ export class S3Surgeon {
           if (err) {
             reject(err);
           } else {
-            console.log(filePath);
+            console.log(key);
             resolve(data);
           }
         }
