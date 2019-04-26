@@ -35,5 +35,11 @@ const options = [
   (result, option) => ((result[option] = program[option] as string), result),
   {} as any
 );
+
+// In case of default options make sure that s3-hashes.json isn't uploaded on subsequent runs
+if (options.directory === "." && options.hashFile === "s3-hashes.json") {
+  options.hashFile = `../${options.hashFile}`;
+}
+
 const s3surgeon = new S3Surgeon(options);
 s3surgeon.sync();
