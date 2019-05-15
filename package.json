@@ -1,8 +1,12 @@
 {
-  "name": "s3surgeon",
-  "version": "0.0.1",
+  "name": "@neoskop/s3surgeon",
+  "version": "0.0.2",
   "description": "Sync your files to AWS S3 with surgical precision.",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "keywords": [
+    "AWS",
+    "S3"
+  ],
   "bin": {
     "s3surgeon": "lib/index.js"
   },
@@ -22,15 +26,18 @@
   },
   "homepage": "https://github.com/neoskop/s3surgeon#readme",
   "dependencies": {
-    "aws-sdk": "2.443.0",
+    "aws-sdk": "2.455.0",
     "commander": "2.20.0",
-    "mime-types": "^2.1.24"
+    "mime-types": "2.1.24"
   },
   "devDependencies": {
-    "@types/mime-types": "^2.1.0",
-    "@types/node": "11.13.7",
-    "nodemon": "1.18.11",
+    "@types/mime-types": "2.1.0",
+    "@types/node": "12.0.2",
+    "nodemon": "1.19.0",
     "ts-node": "8.1.0",
     "typescript": "3.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
