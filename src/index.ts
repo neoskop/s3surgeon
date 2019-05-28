@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import program from "commander";
+import { S3Error } from "./s3.error";
 import { S3Surgeon } from "./s3surgeon";
 
 program
@@ -42,4 +43,11 @@ if (options.directory === "." && options.hashFile === "s3-hashes.json") {
 }
 
 const s3surgeon = new S3Surgeon(options);
-s3surgeon.sync();
+
+s3surgeon.sync().catch(err => {
+  if (err instanceof S3Error) {
+    console.error(`There was a problem talking to S3: ${err.message}`);
+  } else {
+    console.error(`Syncing failed: ${err.message}`);
+  }
+});

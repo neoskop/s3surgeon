@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as mimetypes from "mime-types";
 import * as path from "path";
 import { promisify } from "util";
+import { S3Error } from "./s3.error";
 import { S3SurgeonOptions } from "./s3surgeon-options.interface";
 
 export class S3Surgeon {
@@ -43,13 +44,19 @@ export class S3Surgeon {
 
   private async uploadFiles(
     files: { key: string; hash: string }[]
-  ): Promise<void> {
-    await Promise.all(files.map(file => this.uploadFile(file.key, file.hash)));
+  ): Promise<void[]> {
+    try {
+      return Promise.all(
+        files.map(file => this.uploadFile(file.key, file.hash))
+      );
+    } catch (err) {
+      throw new S3Error(err.message);
+    }
   }
 
   private async uploadFile(key: string, hash: string): Promise<void> {
     const filePath = path.join(this.opts.directory, key);
-    new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const contentType =
         mimetypes.contentType(filePath) || "application/octet-stream";
       const cacheControl = this.getCacheMaxAge(contentType);
@@ -109,7 +116,9 @@ export class S3Surgeon {
     const hashes = await new Promise((resolve, reject) => {
       this.s3.listObjects({ Bucket: this.opts.bucket }, async (err, data) => {
         if (err) {
-          reject(`Couldn't list objects in bucket: ${err}`);
+          reject(
+            new S3Error(`Couldn't list objects in bucket: ${err.message}`)
+          );
         } else if (data.Contents) {
           const hashes: { [key: string]: string | null } = {};
           for (const key of data.Contents.map(object => object.Key as string)) {
@@ -139,7 +148,11 @@ export class S3Surgeon {
         { Bucket: this.opts.bucket, Key: key as string },
         async (err, data) => {
           if (err) {
-            reject(`Couldn't get hash of object with key ${key}: ${err}`);
+            reject(
+              new S3Error(
+                `Couldn't get hash of object with key ${key}: ${err.message}`
+              )
+            );
           } else {
             if (data.Metadata && data.Metadata.hash) {
               resolve(data.Metadata.hash);
