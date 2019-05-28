@@ -50,16 +50,19 @@ export class S3Surgeon {
   private async uploadFile(key: string, hash: string): Promise<void> {
     const filePath = path.join(this.opts.directory, key);
     new Promise((resolve, reject) => {
+      const contentType =
+        mimetypes.contentType(filePath) || "application/octet-stream";
+      const cacheControl = this.getCacheMaxAge(contentType);
       this.s3.upload(
         {
           ACL: "private",
           Bucket: this.opts.bucket,
           Key: key,
           Body: fs.createReadStream(filePath),
-          CacheControl: "max-age=86400",
-          ContentType: mimetypes.lookup(filePath) || "application/octet-stream",
+          CacheControl: cacheControl,
+          ContentType: contentType,
           Metadata: {
-            hash: hash
+            hash
           }
         },
         (err: Error, data: ManagedUpload.SendData) => {
@@ -72,6 +75,17 @@ export class S3Surgeon {
         }
       );
     });
+  }
+
+  private getCacheMaxAge(contentType: string): string {
+    if (
+      contentType.startsWith("text/html") ||
+      contentType.startsWith("application/json")
+    ) {
+      return "no-cache";
+    }
+
+    return "max-age=31536000";
   }
 
   private async updateHashFile(
