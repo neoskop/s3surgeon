@@ -111,7 +111,7 @@ export class S3Surgeon {
     const filePath = path.join(this.opts.directory, key);
     await new Promise((resolve, reject) => {
       const contentType =
-        mimetypes.contentType(filePath) || "application/octet-stream";
+        mimetypes.lookup(filePath) || "application/octet-stream";
       const cacheControl = this.getCacheMaxAge(contentType);
       this.s3.upload(
         {
