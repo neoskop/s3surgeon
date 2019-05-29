@@ -5,4 +5,5 @@ export interface S3SurgeonOptions {
   bucket: string;
   directory: string;
   hashFile: string;
+  purge: boolean;
 }

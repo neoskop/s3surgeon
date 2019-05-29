@@ -11,6 +11,7 @@ program
   .option("-r --region <region>", "AWS Region", "eu-central-1")
   .option("-b, --bucket <bucket>", "Bucket ARN")
   .option("-d, --directory <directory>", "Directory to sync", ".")
+  .option("-P, --no-purge", "Keep files in the bucket that don't exist locally")
   .option(
     "-h, --hash-file <hash-file>",
     "File containing hash cache",
@@ -36,6 +37,7 @@ const options = [
   (result, option) => ((result[option] = program[option] as string), result),
   {} as any
 );
+options.purge = program.purge;
 
 // In case of default options make sure that s3-hashes.json isn't uploaded on subsequent runs
 if (options.directory === "." && options.hashFile === "s3-hashes.json") {

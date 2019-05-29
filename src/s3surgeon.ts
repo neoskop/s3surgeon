@@ -1,4 +1,5 @@
 import * as AWS from "aws-sdk";
+import { AWSError } from "aws-sdk";
 import { ManagedUpload } from "aws-sdk/clients/s3";
 import crypto from "crypto";
 import * as fs from "fs";
@@ -27,19 +28,71 @@ export class S3Surgeon {
     const hashes = await this.loadHashFile();
     const directory = path.resolve(this.opts.directory);
 
-    const filteredLocalFiles = (await this.getLocalFiles(this.opts.directory))
-      .map(file => {
+    const localFiles = (await this.getLocalFiles(this.opts.directory)).map(
+      file => {
         return { key: path.relative(directory, file.key), hash: file.hash };
-      })
-      .filter(file => {
-        return (
-          !(file.key in hashes) ||
-          hashes[file.key] === null ||
-          hashes[file.key] !== file.hash
-        );
-      });
+      }
+    );
+    const filteredLocalFiles = localFiles.filter(file => {
+      return (
+        !(file.key in hashes) ||
+        hashes[file.key] === null ||
+        hashes[file.key] !== file.hash
+      );
+    });
     await this.uploadFiles(filteredLocalFiles);
-    await this.updateHashFile(hashes, filteredLocalFiles);
+    await this.updateHashFile(localFiles);
+
+    if (this.opts.purge) {
+      await this.purgeStaleFiles(localFiles.map(file => file.key));
+    }
+  }
+
+  private async purgeStaleFiles(keysToKeep: string[]) {
+    const keysToDelete: string[] = (await new Promise<string[]>(
+      (resolve, reject) => {
+        this.s3.listObjects({ Bucket: this.opts.bucket }, async (err, data) => {
+          if (err) {
+            reject(
+              new S3Error(`Couldn't list objects in bucket: ${err.message}`)
+            );
+          } else if (data.Contents) {
+            const keys = data.Contents.map(object => object.Key as string);
+            resolve(keys);
+          }
+        });
+      }
+    )).filter(key => !keysToKeep.includes(key));
+
+    if (!keysToDelete || keysToDelete.length === 0) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      this.s3.deleteObjects(
+        {
+          Bucket: this.opts.bucket,
+          Delete: {
+            Objects: keysToDelete.map(key => {
+              return {
+                Key: key
+              };
+            })
+          }
+        },
+        async (err: AWSError) => {
+          if (err) {
+            reject(
+              new S3Error(
+                `Couldn't delete stale objects in bucket: ${err.message}`
+              )
+            );
+          } else {
+            resolve();
+          }
+        }
+      );
+    });
   }
 
   private async uploadFiles(
@@ -96,14 +149,9 @@ export class S3Surgeon {
   }
 
   private async updateHashFile(
-    existingHashes: { [key: string]: string },
     files: { key: string; hash: string }[]
   ): Promise<void> {
     const hashes: { [key: string]: string | null } = {};
-
-    for (const existingKey of Object.keys(existingHashes)) {
-      hashes[existingKey] = existingHashes[existingKey];
-    }
 
     for (const file of files) {
       hashes[file.key] = file.hash;
