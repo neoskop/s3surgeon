@@ -21,11 +21,9 @@ $ s3surgeon \
     --access-key-id <access-key-id> \
     --secret-access-key <secret-access-key>
     --bucket <bucket-name>
-foo.txt
-foo/bar.bar
+Upload: foo.txt
+Upload: foo/bar.bar
 ```
-
-When uploading files to S3 `s3surgeon` will print out the key of the file and nothing else to make it easy to create an invalidation for [CloudFront][2].
 
 For a complete reference of available switches and options run:
 
@@ -38,4 +36,3 @@ $ s3surgeon -h
 This project is under the terms of the Apache License, Version 2.0. A copy of this license is included with the sources.
 
 [1]: https://aws.amazon.com/de/s3/
-[2]: https://aws.amazon.com/de/cloudfront/
