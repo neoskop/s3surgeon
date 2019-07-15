@@ -113,6 +113,41 @@ test("set charset in content-type header", async () => {
   );
 });
 
+test("enable caching for text files", async () => {
+  const sut = setupService({
+    bucket: "bucket-1"
+  });
+  await sut.sync();
+  expect(sut.s3.upload).toHaveBeenCalledWith(
+    expect.objectContaining({
+      CacheControl: expect.stringMatching(/max-age=\d+/)
+    }),
+    expect.any(Function)
+  );
+});
+
+test("disable caching for HTML and JSON", async () => {
+  const sut = setupService({
+    bucket: "bucket-1",
+    directory: path.resolve(__dirname, "..", "test", "local-2")
+  });
+  await sut.sync();
+  expect(sut.s3.upload).toHaveBeenCalledWith(
+    expect.objectContaining({
+      CacheControl: "no-cache",
+      Key: "bar.html"
+    }),
+    expect.any(Function)
+  );
+  expect(sut.s3.upload).toHaveBeenCalledWith(
+    expect.objectContaining({
+      CacheControl: "no-cache",
+      Key: "foo.json"
+    }),
+    expect.any(Function)
+  );
+});
+
 test("delete files that don't exist locally", async () => {
   const sut = setupService({ bucket: "bucket-2" });
   await sut.sync();
