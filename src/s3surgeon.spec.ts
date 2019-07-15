@@ -102,6 +102,17 @@ test("upload all non-existing files", async () => {
   expect(sut.s3.upload).toHaveBeenCalledTimes(2);
 });
 
+test("set charset in content-type header", async () => {
+  const sut = setupService({ bucket: "bucket-2" });
+  await sut.sync();
+  expect(sut.s3.upload).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ContentType: "text/plain; charset=utf-8"
+    }),
+    expect.any(Function)
+  );
+});
+
 test("delete files that don't exist locally", async () => {
   const sut = setupService({ bucket: "bucket-2" });
   await sut.sync();

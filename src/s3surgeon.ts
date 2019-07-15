@@ -123,7 +123,7 @@ export class S3Surgeon {
           Key: key,
           Body: fs.createReadStream(filePath),
           CacheControl: cacheControl,
-          ContentType: contentType,
+          ContentType: mimetypes.contentType(contentType) || contentType,
           Metadata: {
             hash
           }
