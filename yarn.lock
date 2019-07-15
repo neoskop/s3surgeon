@@ -391,10 +391,10 @@
   resolved "https://registry.yarnpkg.com/@types/mime-types/-/mime-types-2.1.0.tgz#9ca52cda363f699c69466c2a6ccdaad913ea7a73"
   integrity sha1-nKUs2jY/aZxpRmwqbM2q2RPqenM=
 
-"@types/node@12.0.12":
-  version "12.0.12"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.0.12.tgz#cc791b402360db1eaf7176479072f91ee6c6c7ca"
-  integrity sha512-Uy0PN4R5vgBUXFoJrKryf5aTk3kJ8Rv3PdlHjl6UaX+Cqp1QE0yPQ68MPXGrZOfG7gZVNDIJZYyot0B9ubXUrQ==
+"@types/node@12.6.2":
+  version "12.6.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.6.2.tgz#a5ccec6abb6060d5f20d256fb03ed743e9774999"
+  integrity sha512-gojym4tX0FWeV2gsW4Xmzo5wxGjXGm550oVUII7f7G5o4BV6c7DBdiG1RRQd+y1bvqRyYtPfMK85UM95vsapqQ==
 
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
@@ -581,7 +581,7 @@ atob@^2.1.1:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk-mock@^4.5.0:
+aws-sdk-mock@4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/aws-sdk-mock/-/aws-sdk-mock-4.5.0.tgz#9de5feefaf9c755f22fcf029db3f202599a9219e"
   integrity sha512-PAZKbQsdaVVoMr1JZbi04FUrkxCK16qnwBWLm4keeBrEfqYab/cFNsn5IVp/ThdMQpJGYHnmqUPyFq1plKaHZg==
@@ -590,7 +590,22 @@ aws-sdk-mock@^4.5.0:
     sinon "^7.3.2"
     traverse "^0.6.6"
 
-aws-sdk@2.488.0, aws-sdk@^2.483.0:
+aws-sdk@2.493.0:
+  version "2.493.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.493.0.tgz#2526208efc0fff91529c41c1d9f5cd15cdfcc937"
+  integrity sha512-xLNpjiNgLZoXqwmLQ+czP3UQzeRgsutpG1KGfVUaj/3giqEElpn0wYkwhkJt4Glm9xf3jgzAdbFEDYM7u+Llxg==
+  dependencies:
+    buffer "4.9.1"
+    events "1.1.1"
+    ieee754 "1.1.8"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.3.2"
+    xml2js "0.4.19"
+
+aws-sdk@^2.483.0:
   version "2.488.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.488.0.tgz#1664e14743d93793d2ffc4b2e70b7ce19c008d84"
   integrity sha512-9AP48tyF1E5+x1CKeiRlj0Sv1YF7KI0BdSW9JP8x3ClhPWNUHjDYNH2OwsALuG1BloeY2ZigYqfI2fB7g3rNHQ==
@@ -3970,10 +3985,10 @@ type-detect@4.0.8:
   resolved "https://registry.yarnpkg.com/type-detect/-/type-detect-4.0.8.tgz#7646fb5f18871cfbb7749e69bd39a6388eb7450c"
   integrity sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==
 
-typescript@3.5.2:
-  version "3.5.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.5.2.tgz#a09e1dc69bc9551cadf17dba10ee42cf55e5d56c"
-  integrity sha512-7KxJovlYhTX5RaRbUdkAXN1KUZ8PwWlTzQdHV6xNqvuFOs7+WBo10TQUqT19Q/Jz2hk5v9TQDIhyLhhJY4p5AA==
+typescript@3.5.3:
+  version "3.5.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.5.3.tgz#c830f657f93f1ea846819e929092f5fe5983e977"
+  integrity sha512-ACzBtm/PhXBDId6a6sDJfroT2pOWt/oOnk4/dElG5G33ZL776N3Y6/6bKZJBFpd+b05F3Ct9qDjMeJmRWtE2/g==
 
 uglify-js@^3.1.4:
   version "3.6.0"
