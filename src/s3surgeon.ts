@@ -48,21 +48,48 @@ export class S3Surgeon {
     }
   }
 
-  private async purgeStaleFiles(keysToKeep: string[]) {
-    const keysToDelete: string[] = (await new Promise<string[]>(
-      (resolve, reject) => {
-        this.s3.listObjects({ Bucket: this.opts.bucket }, async (err, data) => {
-          if (err) {
-            reject(
-              new S3Error(`Couldn't list objects in bucket: ${err.message}`)
-            );
-          } else if (data.Contents) {
-            const keys = data.Contents.map(object => object.Key as string);
-            resolve(keys);
-          }
-        });
+  private async getSubsetOfFiles(
+    Marker?: string
+  ): Promise<AWS.S3.ListObjectsOutput> {
+    return new Promise((resolve, reject) => {
+      this.s3.listObjects({ Bucket: this.opts.bucket, Marker }, (err, data) => {
+        if (err) {
+          reject(
+            new S3Error(`Couldn't list objects in bucket: ${err.message}`)
+          );
+        } else {
+          resolve(data);
+        }
+      });
+    });
+  }
+
+  private async getAllFiles(): Promise<string[]> {
+    let startAfter: string | undefined = undefined;
+    let isTruncated = false;
+
+    const allKeys = [];
+    do {
+      const results: AWS.S3.ListObjectsOutput = await this.getSubsetOfFiles(
+        startAfter
+      );
+      isTruncated = !!results.IsTruncated;
+      if (results.Contents?.length) {
+        startAfter = results.Contents[results.Contents.length - 1].Key;
+        allKeys.push(...results.Contents.map(object => object.Key as string));
+      } else {
+        break;
       }
-    )).filter(key => !keysToKeep.includes(key));
+    } while (isTruncated);
+
+    return allKeys;
+  }
+
+  private async purgeStaleFiles(keysToKeep: string[]) {
+    const allKeys = await this.getAllFiles();
+    const keysToDelete: string[] = allKeys.filter(
+      key => !keysToKeep.includes(key)
+    );
 
     if (!keysToDelete || keysToDelete.length === 0) {
       return Promise.resolve();
@@ -71,31 +98,51 @@ export class S3Surgeon {
     keysToDelete.forEach(key =>
       console.log(`${chalk.default.red.bold("Delete:")} ${key}`)
     );
-    return new Promise((resolve, reject) => {
-      this.s3.deleteObjects(
-        {
-          Bucket: this.opts.bucket,
-          Delete: {
-            Objects: keysToDelete.map(key => {
-              return {
-                Key: key
-              };
-            })
-          }
-        },
-        async (err: AWSError) => {
-          if (err) {
-            reject(
-              new S3Error(
-                `Couldn't delete stale objects in bucket: ${err.message}`
-              )
-            );
-          } else {
-            resolve();
-          }
-        }
-      );
-    });
+
+    // we chunk into chunks of 1000 because s3.deleteObjects can only
+    // delete a maxiumum of 1000 objects at once
+    const chunks = keysToDelete.reduce<string[][]>((resultArray, item, idx) => {
+      const chunkIndex = Math.floor(idx / 1000);
+
+      if (!resultArray[chunkIndex]) {
+        resultArray[chunkIndex] = []; // start a new chunk
+      }
+
+      resultArray[chunkIndex].push(item);
+
+      return resultArray;
+    }, []);
+
+    const promises = chunks.map(
+      () =>
+        new Promise((resolve, reject) => {
+          this.s3.deleteObjects(
+            {
+              Bucket: this.opts.bucket,
+              Delete: {
+                Objects: keysToDelete.map(key => {
+                  return {
+                    Key: key
+                  };
+                })
+              }
+            },
+            async (err: AWSError) => {
+              if (err) {
+                reject(
+                  new S3Error(
+                    `Couldn't delete stale objects in bucket: ${err.message}`
+                  )
+                );
+              } else {
+                resolve();
+              }
+            }
+          );
+        })
+    );
+
+    return Promise.all(promises);
   }
 
   private async uploadFiles(
