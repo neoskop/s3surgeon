@@ -31,9 +31,24 @@ const setupService = (opts: Partial<S3SurgeonOptions> = {}): S3Surgeon => {
     "S3",
     "listObjects",
     async (
-      params: any,
+      params: AWS.S3.ListObjectsRequest,
       callback: (err: any, data: ListObjectsOutput) => void
     ) => {
+      if (mergedOpts.bucket === "bucket-2001") {
+        // listObjects only ever returns 1000 files at once, so:
+        // mock bucket with more than 2000 files here
+        const start = Number(params.Marker) || 0;
+        const resultLength = Math.min(Math.max(2001 - start, 0), 1000);
+
+        callback(null, {
+          Contents: Array.from({ length: resultLength }, (_, idx) => ({
+            Key: `${start + idx}`
+          })),
+          IsTruncated: resultLength === 1000
+        });
+        return;
+      }
+
       const bucketDir = path.resolve(
         __dirname,
         "..",
@@ -83,8 +98,10 @@ const setupService = (opts: Partial<S3SurgeonOptions> = {}): S3Surgeon => {
   );
 
   sut.s3 = new AWS.S3();
-  jest.spyOn(sut.s3, "upload");
-  jest.spyOn(sut.s3, "deleteObjects");
+
+  ["upload", "deleteObjects", "listObjects"].forEach(key => {
+    jest.spyOn(sut.s3, key as jest.FunctionPropertyNames<AWS.S3>);
+  });
   return sut;
 };
 
@@ -156,6 +173,23 @@ test("delete files that don't exist locally", async () => {
     expect.objectContaining({
       Delete: {
         Objects: [{ Key: "baz.txt" }]
+      }
+    }),
+    expect.any(Function)
+  );
+});
+
+test("delete files that don't exist locally when there are more than 1000 remote objects", async () => {
+  const sut = setupService({ bucket: "bucket-2001" });
+  await sut.sync();
+  expect(sut.s3.listObjects).toHaveBeenCalledTimes(4);
+  expect(sut.s3.deleteObjects).toHaveBeenCalledTimes(3);
+  expect(sut.s3.deleteObjects).toHaveBeenCalledWith(
+    expect.objectContaining({
+      Delete: {
+        Objects: expect.arrayContaining(
+          Array.from({ length: 2001 }, (_, idx) => ({ Key: `${idx}` }))
+        )
       }
     }),
     expect.any(Function)
