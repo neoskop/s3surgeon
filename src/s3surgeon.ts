@@ -95,10 +95,6 @@ export class S3Surgeon {
       return Promise.resolve();
     }
 
-    keysToDelete.forEach(key =>
-      console.log(`${chalk.default.red.bold('Delete:')} ${key}`)
-    );
-
     // we chunk into chunks of 1000 because s3.deleteObjects can only
     // delete a maxiumum of 1000 objects at once
     const chunks = keysToDelete.reduce<string[][]>((resultArray, item, idx) => {
@@ -142,6 +138,11 @@ export class S3Surgeon {
         })
     );
 
+    console.log(
+      keysToDelete
+        .map(key => `${chalk.default.red.bold('Delete:')} ${key}`)
+        .join('\n')
+    );
     return Promise.all(promises);
   }
 
