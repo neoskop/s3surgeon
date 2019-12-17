@@ -1,13 +1,13 @@
-import * as AWS from "aws-sdk";
-import { AWSError } from "aws-sdk";
-import { ManagedUpload } from "aws-sdk/clients/s3";
-import * as chalk from "chalk";
-import crypto from "crypto";
-import * as fs from "fs";
-import * as mimetypes from "mime-types";
-import * as path from "path";
-import { S3Error } from "./s3.error";
-import { S3SurgeonOptions } from "./s3surgeon-options.interface";
+import * as AWS from 'aws-sdk';
+import { AWSError } from 'aws-sdk';
+import { ManagedUpload } from 'aws-sdk/clients/s3';
+import * as chalk from 'chalk';
+import crypto from 'crypto';
+import * as fs from 'fs';
+import * as mimetypes from 'mime-types';
+import * as path from 'path';
+import { S3Error } from './s3.error';
+import { S3SurgeonOptions } from './s3surgeon-options.interface';
 
 export class S3Surgeon {
   public s3: AWS.S3;
@@ -96,7 +96,7 @@ export class S3Surgeon {
     }
 
     keysToDelete.forEach(key =>
-      console.log(`${chalk.default.red.bold("Delete:")} ${key}`)
+      console.log(`${chalk.default.red.bold('Delete:')} ${key}`)
     );
 
     // we chunk into chunks of 1000 because s3.deleteObjects can only
@@ -161,11 +161,11 @@ export class S3Surgeon {
     const filePath = path.join(this.opts.directory, key);
     await new Promise((resolve, reject) => {
       const contentType =
-        mimetypes.lookup(filePath) || "application/octet-stream";
+        mimetypes.lookup(filePath) || 'application/octet-stream';
       const cacheControl = this.getCacheMaxAge(contentType);
       this.s3.upload(
         {
-          ACL: "private",
+          ACL: 'private',
           Bucket: this.opts.bucket,
           Key: key,
           Body: fs.createReadStream(filePath),
@@ -179,7 +179,7 @@ export class S3Surgeon {
           if (err) {
             reject(err);
           } else {
-            console.log(`${chalk.default.blue.bold("Upload:")} ${key}`);
+            console.log(`${chalk.default.blue.bold('Upload:')} ${key}`);
             resolve(data);
           }
         }
@@ -189,13 +189,13 @@ export class S3Surgeon {
 
   private getCacheMaxAge(contentType: string): string {
     if (
-      contentType.startsWith("text/html") ||
-      contentType.startsWith("application/json")
+      contentType.startsWith('text/html') ||
+      contentType.startsWith('application/json')
     ) {
-      return "no-cache";
+      return 'no-cache';
     }
 
-    return "max-age=31536000";
+    return 'max-age=31536000';
   }
 
   private async updateHashFile(
@@ -280,13 +280,13 @@ export class S3Surgeon {
 
   private async getHashOfLocalFile(file: string): Promise<string> {
     return new Promise(resolve => {
-      const hash = crypto.createHash("sha256");
+      const hash = crypto.createHash('sha256');
       const input = fs.createReadStream(file);
-      input.on("readable", () => {
+      input.on('readable', () => {
         const data = input.read();
         if (data) hash.update(data);
         else {
-          resolve(hash.digest("hex"));
+          resolve(hash.digest('hex'));
         }
       });
     });
