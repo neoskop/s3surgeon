@@ -184,20 +184,6 @@ test("delete files that don't exist locally when there are more than 1000 remote
   await sut.sync();
   expect(sut.s3.listObjects).toHaveBeenCalledTimes(4);
   expect(sut.s3.deleteObjects).toHaveBeenCalledTimes(3);
-
-  expect.extend({
-    toBeArrayOfLength(received, length: number) {
-      const pass = received.length === length;
-      return {
-        message: () =>
-          `expected ${this.utils.printReceived(
-            received
-          )} to have ${length} elements`,
-        pass
-      };
-    }
-  });
-
   expect(sut.s3.deleteObjects).toHaveBeenCalledWith(
     expect.objectContaining({
       Delete: {
