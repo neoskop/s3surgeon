@@ -19,7 +19,9 @@ const setupService = (opts: Partial<S3SurgeonOptions> = {}): S3Surgeon => {
       bucket: 'bucket-1',
       directory: path.resolve(__dirname, '..', 'test', 'local'),
       hashFile: path.resolve(__dirname, '..', 'test', 's3-hashes.json'),
-      purge: true
+      purge: true,
+      forcePathStyle: false,
+      signatureVersion: 4
     },
     opts
   );

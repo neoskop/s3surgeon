@@ -1,7 +1,7 @@
 import * as AWS from 'aws-sdk';
 import { AWSError } from 'aws-sdk';
-import { ManagedUpload } from 'aws-sdk/clients/s3';
-import * as chalk from 'chalk';
+import S3, { ManagedUpload } from 'aws-sdk/clients/s3';
+import chalk from 'chalk';
 import crypto from 'crypto';
 import * as fs from 'fs';
 import * as mimetypes from 'mime-types';
@@ -13,11 +13,20 @@ export class S3Surgeon {
   public s3: AWS.S3;
 
   constructor(private readonly opts: S3SurgeonOptions) {
-    this.s3 = new AWS.S3({
+    const clientOpts: S3.Types.ClientConfiguration = {
       accessKeyId: opts.accessKeyId,
       secretAccessKey: opts.secretAccessKey,
-      region: opts.region
-    });
+      s3ForcePathStyle: opts.forcePathStyle,
+      signatureVersion: `v${opts.signatureVersion}`
+    };
+
+    if (opts.endpoint) {
+      clientOpts.endpoint = opts.endpoint;
+    } else {
+      clientOpts.region = opts.region;
+    }
+
+    this.s3 = new AWS.S3(clientOpts);
   }
 
   public async sync() {
@@ -139,9 +148,7 @@ export class S3Surgeon {
     );
 
     console.log(
-      keysToDelete
-        .map(key => `${chalk.default.red.bold('Delete:')} ${key}`)
-        .join('\n')
+      keysToDelete.map(key => `${chalk.red.bold('Delete:')} ${key}`).join('\n')
     );
     return Promise.all(promises);
   }
@@ -180,7 +187,7 @@ export class S3Surgeon {
           if (err) {
             reject(err);
           } else {
-            console.log(`${chalk.default.blue.bold('Upload:')} ${key}`);
+            console.log(`${chalk.blue.bold('Upload:')} ${key}`);
             resolve(data);
           }
         }

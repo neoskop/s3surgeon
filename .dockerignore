@@ -1,6 +1,9 @@
+test
 node_modules
 lib
 yarn-error.log
 s3-hashes.json
 coverage
-test/.minio.sys
+Dockerfile
+docker-compose.yaml
+.vscode

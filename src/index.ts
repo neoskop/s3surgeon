@@ -6,11 +6,17 @@ import { S3Surgeon } from './s3surgeon';
 
 program
   .version('0.0.1', '-v, --version')
-  .option('-k --access-key-id <access-key-id>', 'AWS Access Key ID')
-  .option('-s --secret-access-key <secret-access-key>', 'AWS Secret Access Key')
-  .option('-r --region <region>', 'AWS Region', 'eu-central-1')
+  .option('-k, --access-key-id <access-key-id>', 'AWS Access Key ID')
+  .option(
+    '-s, --secret-access-key <secret-access-key>',
+    'AWS Secret Access Key'
+  )
+  .option('-r, --region <region>', 'AWS Region', 'eu-central-1')
+  .option('-e, --endpoint <endpoint>', 'S3 Endpoint', '')
   .option('-b, --bucket <bucket>', 'Bucket ARN')
   .option('-d, --directory <directory>', 'Directory to sync', '.')
+  .option('-f, --force-path-style', 'Force path style')
+  .option('-g, --signature-version <2|3|4>', 'Set signature version', 4)
   .option('-P, --no-purge', "Keep files in the bucket that don't exist locally")
   .option(
     '-h, --hash-file <hash-file>',
@@ -32,11 +38,15 @@ const options = [
   'bucket',
   'region',
   'directory',
-  'hashFile'
+  'hashFile',
+  'endpoint'
 ].reduce(
   (result, option) => ((result[option] = program[option] as string), result),
   {} as any
 );
+
+options.forcePathStyle = program.forcePathStyle;
+options.signatureVersion = program.signatureVersion;
 options.purge = program.purge;
 
 // In case of default options make sure that s3-hashes.json isn't uploaded on subsequent runs
