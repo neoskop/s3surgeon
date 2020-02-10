@@ -31,6 +31,10 @@ For a complete reference of available switches and options run:
 $ s3surgeon -h
 ```
 
+## Non-AWS-Usage
+
+For an example on how to use `s3surgeon` with MinIO instead of AWS S3 see `docker-compose.yml`
+
 ## License
 
 This project is under the terms of the Apache License, Version 2.0. A copy of this license is included with the sources.
