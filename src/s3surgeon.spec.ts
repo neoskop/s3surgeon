@@ -198,3 +198,14 @@ test("delete files that don't exist locally when there are more than 1000 remote
     (sut.s3.deleteObjects as any).mock.calls[0][0].Delete.Objects.length
   ).toEqual(2001);
 });
+
+test('only upload files in include option', async () => {
+  const sut = setupService({
+    bucket: 'bucket-1',
+    directory: path.resolve(__dirname, '..', 'test', 'local-2'),
+    include: '\\.html$'
+  });
+  await sut.sync();
+  expect(sut.s3.upload).toHaveBeenCalledTimes(1);
+  expect(sut.s3.deleteObjects).not.toHaveBeenCalled();
+});

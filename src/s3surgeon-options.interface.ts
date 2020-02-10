@@ -1,12 +1,13 @@
 export interface S3SurgeonOptions {
   accessKeyId: string;
-  secretAccessKey: string;
-  region: string;
   bucket: string;
   directory: string;
-  hashFile: string;
-  signatureVersion: number;
   endpoint?: string;
   forcePathStyle: boolean;
+  hashFile: string;
+  include?: string;
   purge: boolean;
+  region: string;
+  secretAccessKey: string;
+  signatureVersion: number;
 }

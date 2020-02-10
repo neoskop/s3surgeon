@@ -11,6 +11,7 @@ import { S3SurgeonOptions } from './s3surgeon-options.interface';
 
 export class S3Surgeon {
   public s3: AWS.S3;
+  private includeRegex: RegExp | null = null;
 
   constructor(private readonly opts: S3SurgeonOptions) {
     const clientOpts: S3.Types.ClientConfiguration = {
@@ -26,6 +27,10 @@ export class S3Surgeon {
       clientOpts.region = opts.region;
     }
 
+    if (this.opts.include !== undefined) {
+      this.includeRegex = new RegExp(this.opts.include);
+    }
+
     this.s3 = new AWS.S3(clientOpts);
   }
 
@@ -37,11 +42,11 @@ export class S3Surgeon {
     const hashes = await this.loadHashFile();
     const directory = path.resolve(this.opts.directory);
 
-    const localFiles = (await this.getLocalFiles(this.opts.directory)).map(
-      file => {
+    const localFiles = (await this.getLocalFiles(this.opts.directory))
+      .map(file => {
         return { key: path.relative(directory, file.key), hash: file.hash };
-      }
-    );
+      })
+      .filter(file => this.isFileIncluded(file.key));
     const filteredLocalFiles = localFiles.filter(file => {
       return (
         !(file.key in hashes) ||
@@ -55,6 +60,10 @@ export class S3Surgeon {
     if (this.opts.purge) {
       await this.purgeStaleFiles(localFiles.map(file => file.key));
     }
+  }
+
+  private isFileIncluded(file: string): boolean {
+    return !this.includeRegex || this.includeRegex.test(file);
   }
 
   private async getSubsetOfFiles(
@@ -91,7 +100,7 @@ export class S3Surgeon {
       }
     } while (isTruncated);
 
-    return allKeys;
+    return allKeys.filter(this.isFileIncluded.bind(this));
   }
 
   private async purgeStaleFiles(keysToKeep: string[]) {

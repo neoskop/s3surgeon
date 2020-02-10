@@ -17,6 +17,10 @@ program
   .option('-d, --directory <directory>', 'Directory to sync', '.')
   .option('-f, --force-path-style', 'Force path style')
   .option('-g, --signature-version <2|3|4>', 'Set signature version', 4)
+  .option(
+    '-i, --include <regex>',
+    'Only consider files for uploading and deletion if the match the regex'
+  )
   .option('-P, --no-purge', "Keep files in the bucket that don't exist locally")
   .option(
     '-H, --hash-file <hash-file>',
@@ -39,7 +43,8 @@ const options = [
   'region',
   'directory',
   'hashFile',
-  'endpoint'
+  'endpoint',
+  'include'
 ].reduce(
   (result, option) => ((result[option] = program[option] as string), result),
   {} as any
