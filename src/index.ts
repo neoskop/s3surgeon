@@ -19,7 +19,7 @@ program
   .option('-g, --signature-version <2|3|4>', 'Set signature version', 4)
   .option('-P, --no-purge', "Keep files in the bucket that don't exist locally")
   .option(
-    '-h, --hash-file <hash-file>',
+    '-H, --hash-file <hash-file>',
     'File containing hash cache',
     's3-hashes.json'
   )
