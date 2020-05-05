@@ -26,22 +26,22 @@
   },
   "homepage": "https://github.com/neoskop/s3surgeon#readme",
   "dependencies": {
-    "aws-sdk": "2.614.0",
-    "chalk": "3.0.0",
-    "commander": "4.1.1",
-    "mime-types": "2.1.26"
+    "aws-sdk": "2.669.0",
+    "chalk": "4.0.0",
+    "commander": "5.1.0",
+    "mime-types": "2.1.27"
   },
   "devDependencies": {
     "@types/chalk": "2.2.0",
-    "@types/jest": "25.1.2",
+    "@types/jest": "25.2.1",
     "@types/mime-types": "2.1.0",
-    "@types/node": "13.7.0",
-    "aws-sdk-mock": "5.0.0",
-    "jest": "25.1.0",
-    "nodemon": "2.0.2",
-    "ts-jest": "25.2.0",
-    "ts-node": "8.6.2",
-    "typescript": "3.7.5"
+    "@types/node": "13.13.4",
+    "aws-sdk-mock": "5.1.0",
+    "jest": "26.0.1",
+    "nodemon": "2.0.3",
+    "ts-jest": "25.4.0",
+    "ts-node": "8.10.1",
+    "typescript": "3.8.3"
   },
   "publishConfig": {
     "access": "public"
