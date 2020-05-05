@@ -32,7 +32,6 @@
     "mime-types": "2.1.27"
   },
   "devDependencies": {
-    "@types/chalk": "2.2.0",
     "@types/jest": "25.2.1",
     "@types/mime-types": "2.1.0",
     "@types/node": "13.13.4",
