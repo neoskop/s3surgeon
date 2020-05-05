@@ -16,7 +16,7 @@ program
   .option('-b, --bucket <bucket>', 'Bucket ARN')
   .option('-d, --directory <directory>', 'Directory to sync', '.')
   .option('-f, --force-path-style', 'Force path style')
-  .option('-g, --signature-version <2|3|4>', 'Set signature version', 4)
+  .option('-g, --signature-version <2|3|4>', 'Set signature version', '4')
   .option(
     '-i, --include <regex>',
     'Only consider files for uploading and deletion if the match the regex'
@@ -29,7 +29,7 @@ program
   )
   .parse(process.argv);
 
-['accessKeyId', 'secretAccessKey', 'bucket'].forEach(option => {
+['accessKeyId', 'secretAccessKey', 'bucket'].forEach((option) => {
   if (!program.hasOwnProperty(option)) {
     program.outputHelp(() => program.help());
     process.exit(1);
@@ -44,7 +44,7 @@ const options = [
   'directory',
   'hashFile',
   'endpoint',
-  'include'
+  'include',
 ].reduce(
   (result, option) => ((result[option] = program[option] as string), result),
   {} as any
@@ -61,7 +61,7 @@ if (options.directory === '.' && options.hashFile === 's3-hashes.json') {
 
 const s3surgeon = new S3Surgeon(options);
 
-s3surgeon.sync().catch(err => {
+s3surgeon.sync().catch((err) => {
   if (err instanceof S3Error) {
     console.error(`There was a problem talking to S3: ${err.message}`);
   } else {
