@@ -29,7 +29,8 @@
     "aws-sdk": "2.710.0",
     "chalk": "4.1.0",
     "commander": "5.1.0",
-    "mime-types": "2.1.27"
+    "mime-types": "2.1.27",
+    "p-limit": "3.0.1"
   },
   "devDependencies": {
     "@types/jest": "26.0.4",

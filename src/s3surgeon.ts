@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import crypto from 'crypto';
 import * as fs from 'fs';
 import * as mimetypes from 'mime-types';
+import pLimit from 'p-limit';
 import * as path from 'path';
 import { S3Error } from './s3.error';
 import { S3SurgeonOptions } from './s3surgeon-options.interface';
@@ -12,13 +13,14 @@ import { S3SurgeonOptions } from './s3surgeon-options.interface';
 export class S3Surgeon {
   public s3: AWS.S3;
   private includeRegex: RegExp | null = null;
+  private limit: pLimit.Limit;
 
   constructor(private readonly opts: S3SurgeonOptions) {
     const clientOpts: S3.Types.ClientConfiguration = {
       accessKeyId: opts.accessKeyId,
       secretAccessKey: opts.secretAccessKey,
       s3ForcePathStyle: opts.forcePathStyle,
-      signatureVersion: `v${opts.signatureVersion}`
+      signatureVersion: `v${opts.signatureVersion}`,
     };
 
     if (opts.endpoint) {
@@ -32,6 +34,7 @@ export class S3Surgeon {
     }
 
     this.s3 = new AWS.S3(clientOpts);
+    this.limit = pLimit(10);
   }
 
   public async sync() {
@@ -43,11 +46,11 @@ export class S3Surgeon {
     const directory = path.resolve(this.opts.directory);
 
     const localFiles = (await this.getLocalFiles(this.opts.directory))
-      .map(file => {
+      .map((file) => {
         return { key: path.relative(directory, file.key), hash: file.hash };
       })
-      .filter(file => this.isFileIncluded(file.key));
-    const filteredLocalFiles = localFiles.filter(file => {
+      .filter((file) => this.isFileIncluded(file.key));
+    const filteredLocalFiles = localFiles.filter((file) => {
       return (
         !(file.key in hashes) ||
         hashes[file.key] === null ||
@@ -58,7 +61,7 @@ export class S3Surgeon {
     await this.updateHashFile(localFiles);
 
     if (this.opts.purge) {
-      await this.purgeStaleFiles(localFiles.map(file => file.key));
+      await this.purgeStaleFiles(localFiles.map((file) => file.key));
     }
   }
 
@@ -94,7 +97,7 @@ export class S3Surgeon {
       isTruncated = !!results.IsTruncated;
       if (results.Contents?.length) {
         startAfter = results.Contents[results.Contents.length - 1].Key;
-        allKeys.push(...results.Contents.map(object => object.Key as string));
+        allKeys.push(...results.Contents.map((object) => object.Key as string));
       } else {
         break;
       }
@@ -106,7 +109,7 @@ export class S3Surgeon {
   private async purgeStaleFiles(keysToKeep: string[]) {
     const allKeys = await this.getAllFiles();
     const keysToDelete: string[] = allKeys.filter(
-      key => !keysToKeep.includes(key)
+      (key) => !keysToKeep.includes(key)
     );
 
     if (!keysToDelete || keysToDelete.length === 0) {
@@ -134,12 +137,12 @@ export class S3Surgeon {
             {
               Bucket: this.opts.bucket,
               Delete: {
-                Objects: keysToDelete.map(key => {
+                Objects: keysToDelete.map((key) => {
                   return {
-                    Key: key
+                    Key: key,
                   };
-                })
-              }
+                }),
+              },
             },
             async (err: AWSError) => {
               if (err) {
@@ -157,7 +160,9 @@ export class S3Surgeon {
     );
 
     console.log(
-      keysToDelete.map(key => `${chalk.red.bold('Delete:')} ${key}`).join('\n')
+      keysToDelete
+        .map((key) => `${chalk.red.bold('Delete:')} ${key}`)
+        .join('\n')
     );
     return Promise.all(promises);
   }
@@ -167,37 +172,42 @@ export class S3Surgeon {
   ): Promise<void[]> {
     try {
       return Promise.all(
-        files.map(file => this.uploadFile(file.key, file.hash))
+        files.map((file) =>
+          this.limit(() => this.uploadFile(file.key, file.hash))
+        )
       );
     } catch (err) {
       throw new S3Error(err.message);
     }
   }
 
-  private async uploadFile(key: string, hash: string): Promise<void> {
+  private uploadFile(key: string, hash: string): Promise<void> {
     const filePath = path.join(this.opts.directory, key);
-    await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const contentType =
         mimetypes.lookup(filePath) || 'application/octet-stream';
       const cacheControl = this.getCacheMaxAge(contentType);
+      const stream = fs.createReadStream(filePath);
       this.s3.upload(
         {
           ACL: 'private',
           Bucket: this.opts.bucket,
           Key: key,
-          Body: fs.createReadStream(filePath),
+          Body: stream,
           CacheControl: cacheControl,
           ContentType: mimetypes.contentType(contentType) || contentType,
           Metadata: {
-            hash
-          }
+            hash,
+          },
         },
         (err: Error, data: ManagedUpload.SendData) => {
+          stream.close();
+
           if (err) {
             reject(err);
           } else {
             console.log(`${chalk.blue.bold('Upload:')} ${key}`);
-            resolve(data);
+            resolve();
           }
         }
       );
@@ -236,7 +246,9 @@ export class S3Surgeon {
           );
         } else if (data.Contents) {
           const hashes: { [key: string]: string | null } = {};
-          for (const key of data.Contents.map(object => object.Key as string)) {
+          for (const key of data.Contents.map(
+            (object) => object.Key as string
+          )) {
             hashes[key] = await this.getHashForKey(key);
           }
 
@@ -283,29 +295,34 @@ export class S3Surgeon {
   private async getLocalFiles(
     directory: string
   ): Promise<{ key: string; hash: string }[]> {
-    const subdirs = await fs.promises.readdir(directory);
+    const subdirs = await this.limit(() => fs.promises.readdir(directory));
     const files = await Promise.all(
       subdirs.map(async (subdirectory: string) => {
         const res = path.resolve(directory, subdirectory);
-        return (await fs.promises.stat(res)).isDirectory()
+        return (await this.limit(() => fs.promises.stat(res))).isDirectory()
           ? this.getLocalFiles(res)
-          : { key: res, hash: await this.getHashOfLocalFile(res) };
+          : {
+              key: res,
+              hash: await this.limit(() => this.getHashOfLocalFile(res)),
+            };
       })
     );
     return Array.prototype.concat(...files);
   }
 
   private async getHashOfLocalFile(file: string): Promise<string> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const hash = crypto.createHash('sha256');
+      hash.setEncoding('hex');
       const input = fs.createReadStream(file);
-      input.on('readable', () => {
-        const data = input.read();
-        if (data) hash.update(data);
-        else {
-          resolve(hash.digest('hex'));
-        }
+
+      input.on('end', () => {
+        hash.end();
+        resolve(hash.read());
+        input.close();
       });
+
+      input.pipe(hash);
     });
   }
 }
