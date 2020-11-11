@@ -131,13 +131,13 @@ export class S3Surgeon {
     }, []);
 
     const promises = chunks.map(
-      () =>
+      (chunkWithKeysToDelete) =>
         new Promise((resolve, reject) => {
           this.s3.deleteObjects(
             {
               Bucket: this.opts.bucket,
               Delete: {
-                Objects: keysToDelete.map((key) => {
+                Objects: chunkWithKeysToDelete.map((key) => {
                   return {
                     Key: key,
                   };
