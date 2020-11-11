@@ -161,9 +161,11 @@ test("delete files that don't exist locally", async () => {
 test("delete files that don't exist locally when there are more than 1000 remote objects", async () => {
   const sut = setupService({ bucket: 'bucket-2001' });
   await sut.sync();
+  const deleteObjects = sut.s3.deleteObjects as jest.Mock;
+
   expect(sut.s3.listObjects).toHaveBeenCalledTimes(4);
-  expect(sut.s3.deleteObjects).toHaveBeenCalledTimes(3);
-  expect(sut.s3.deleteObjects).toHaveBeenCalledWith(
+  expect(deleteObjects).toHaveBeenCalledTimes(3);
+  expect(deleteObjects).toHaveBeenCalledWith(
     expect.objectContaining({
       Delete: {
         Objects: expect.any(Array),
@@ -171,9 +173,10 @@ test("delete files that don't exist locally when there are more than 1000 remote
     }),
     expect.any(Function)
   );
-  expect(
-    (sut.s3.deleteObjects as any).mock.calls[0][0].Delete.Objects.length
-  ).toEqual(2001);
+
+  expect(deleteObjects.mock.calls[0][0].Delete.Objects.length).toEqual(1000);
+  expect(deleteObjects.mock.calls[1][0].Delete.Objects.length).toEqual(1000);
+  expect(deleteObjects.mock.calls[2][0].Delete.Objects.length).toEqual(1);
 });
 
 test('only upload files in include option', async () => {
