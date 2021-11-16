@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/neoskop/s3surgeon#readme",
   "dependencies": {
-    "aws-sdk": "2.789.0",
+    "aws-sdk": "2.814.0",
     "chalk": "4.1.0",
     "commander": "6.2.0",
     "mime-types": "2.1.27",
