@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import program from 'commander';
-import { S3Error } from './s3.error';
-import { S3Surgeon } from './s3surgeon';
+import { program } from 'commander';
+import { S3Error } from './s3.error.js';
+import { S3Surgeon } from './s3surgeon.js';
 
 program
   .version('1.1.1', '-v, --version')
@@ -30,7 +30,7 @@ program
   .parse(process.argv);
 
 ['accessKeyId', 'secretAccessKey', 'bucket'].forEach((option) => {
-  if (!program.hasOwnProperty(option)) {
+  if (!program.getOptionValue(option)) {
     program.outputHelp(() => program.help());
     process.exit(1);
   }
@@ -46,13 +46,15 @@ const options = [
   'endpoint',
   'include',
 ].reduce(
-  (result, option) => ((result[option] = program[option] as string), result),
+  (result, option) => (
+    (result[option] = program.getOptionValue(option) as string), result
+  ),
   {} as any
 );
 
-options.forcePathStyle = program.forcePathStyle;
-options.signatureVersion = program.signatureVersion;
-options.purge = program.purge;
+options.forcePathStyle = program.getOptionValue('forcePathStyle');
+options.signatureVersion = program.getOptionValue('signatureVersion');
+options.purge = program.getOptionValue('purge');
 
 // In case of default options make sure that s3-hashes.json isn't uploaded on subsequent runs
 if (options.directory === '.' && options.hashFile === 's3-hashes.json') {

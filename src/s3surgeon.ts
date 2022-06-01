@@ -1,22 +1,20 @@
-import * as AWS from 'aws-sdk';
-import { AWSError } from 'aws-sdk';
-import S3, { ManagedUpload } from 'aws-sdk/clients/s3';
+import AWS from 'aws-sdk';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import * as fs from 'fs';
 import * as mimetypes from 'mime-types';
-import pLimit from 'p-limit';
+import pLimit, { LimitFunction } from 'p-limit';
 import * as path from 'path';
-import { S3Error } from './s3.error';
-import { S3SurgeonOptions } from './s3surgeon-options.interface';
+import { S3Error } from './s3.error.js';
+import { S3SurgeonOptions } from './s3surgeon-options.interface.js';
 
 export class S3Surgeon {
   public s3: AWS.S3;
   private includeRegex: RegExp | null = null;
-  private limit: pLimit.Limit;
+  private limit: LimitFunction;
 
   constructor(private readonly opts: S3SurgeonOptions) {
-    const clientOpts: S3.Types.ClientConfiguration = {
+    const clientOpts: AWS.S3.Types.ClientConfiguration = {
       accessKeyId: opts.accessKeyId,
       secretAccessKey: opts.secretAccessKey,
       s3ForcePathStyle: opts.forcePathStyle,
@@ -132,7 +130,7 @@ export class S3Surgeon {
 
     const promises = chunks.map(
       (chunkWithKeysToDelete) =>
-        new Promise((resolve, reject) => {
+        new Promise<void>((resolve, reject) => {
           this.s3.deleteObjects(
             {
               Bucket: this.opts.bucket,
@@ -144,7 +142,7 @@ export class S3Surgeon {
                 }),
               },
             },
-            async (err: AWSError) => {
+            async (err: AWS.AWSError) => {
               if (err) {
                 reject(
                   new S3Error(
@@ -176,7 +174,7 @@ export class S3Surgeon {
           this.limit(() => this.uploadFile(file.key, file.hash))
         )
       );
-    } catch (err) {
+    } catch (err: any) {
       throw new S3Error(err.message);
     }
   }
@@ -200,7 +198,7 @@ export class S3Surgeon {
             hash,
           },
         },
-        (err: Error, data: ManagedUpload.SendData) => {
+        (err: Error) => {
           stream.close();
 
           if (err) {
@@ -245,14 +243,14 @@ export class S3Surgeon {
             new S3Error(`Couldn't list objects in bucket: ${err.message}`)
           );
         } else if (data.Contents) {
-          const hashes: { [key: string]: string | null } = {};
+          const partialHashes: { [key: string]: string | null } = {};
           for (const key of data.Contents.map(
             (object) => object.Key as string
           )) {
-            hashes[key] = await this.getHashForKey(key);
+            partialHashes[key] = await this.getHashForKey(key);
           }
 
-          resolve(hashes);
+          resolve(partialHashes);
         }
       });
     });

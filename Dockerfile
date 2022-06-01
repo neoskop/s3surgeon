@@ -1,8 +1,8 @@
-FROM node:15.1.0-buster-slim as base
+FROM node:16.15.0-buster-slim as base
 USER node
 RUN mkdir -p /home/node/app
 WORKDIR /home/node/app
-COPY --chown=node package.json yarn.lock ./
-RUN yarn
+COPY --chown=node package*.json ./
+RUN npm i
 COPY --chown=node . ./
-ENTRYPOINT [ "yarn", "start", "--", "--" ]
+ENTRYPOINT [ "npm", "start", "--", "--" ]

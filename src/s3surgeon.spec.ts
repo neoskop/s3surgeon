@@ -1,4 +1,4 @@
-import * as AWS from 'aws-sdk';
+import AWS from 'aws-sdk';
 import {
   HeadObjectOutput,
   ListObjectsOutput,
@@ -6,8 +6,11 @@ import {
 } from 'aws-sdk/clients/s3';
 import * as fs from 'fs';
 import * as path from 'path';
-import { S3Surgeon } from './s3surgeon';
-import { S3SurgeonOptions } from './s3surgeon-options.interface';
+import { S3Surgeon } from './s3surgeon.js';
+import { S3SurgeonOptions } from './s3surgeon-options.interface.js';
+import { jest } from '@jest/globals';
+
+const __dirname = path.resolve();
 
 const setupService = (opts: Partial<S3SurgeonOptions> = {}): S3Surgeon => {
   const mergedOpts = Object.assign(
