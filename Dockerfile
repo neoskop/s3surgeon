@@ -1,4 +1,4 @@
-FROM node:16.19.0-buster-slim as base
+FROM node:16.19.1-buster-slim as base
 USER node
 RUN mkdir -p /home/node/app
 WORKDIR /home/node/app
