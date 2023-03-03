@@ -19,8 +19,8 @@ const setupService = (opts: Partial<S3SurgeonOptions> = {}): S3Surgeon => {
       secretAccessKey: '',
       region: '',
       bucket: 'bucket-1',
-      directory: path.resolve(__dirname, '..', 'test', 'local'),
-      hashFile: path.resolve(__dirname, '..', 'test', 's3-hashes.json'),
+      directory: path.resolve(__dirname, 'test', 'local'),
+      hashFile: path.resolve(__dirname, 'test', 's3-hashes.json'),
       purge: true,
       forcePathStyle: false,
       signatureVersion: 4,
@@ -72,7 +72,7 @@ const setupService = (opts: Partial<S3SurgeonOptions> = {}): S3Surgeon => {
       return;
     }
 
-    const bucketDir = path.resolve(__dirname, '..', 'test', mergedOpts.bucket);
+    const bucketDir = path.resolve(__dirname, 'test', mergedOpts.bucket);
     const files = await fs.promises.readdir(bucketDir);
     const Contents = files.map((f) => {
       return { Key: f };
@@ -82,14 +82,14 @@ const setupService = (opts: Partial<S3SurgeonOptions> = {}): S3Surgeon => {
     });
   }) as any;
 
-  ['upload', 'deleteObjects', 'listObjects'].forEach((key) => {
-    jest.spyOn(sut.s3, key as jest.FunctionPropertyNames<AWS.S3>);
-  });
+  jest.spyOn(sut.s3, 'upload');
+  jest.spyOn(sut.s3, 'deleteObjects');
+  jest.spyOn(sut.s3, 'listObjects');
   return sut;
 };
 
 afterEach(async () => {
-  const hashFile = path.resolve(__dirname, '..', 'test', 's3-hashes.json');
+  const hashFile = path.resolve(__dirname, 'test', 's3-hashes.json');
   if (fs.existsSync(hashFile)) {
     await fs.promises.unlink(hashFile);
   }
@@ -128,7 +128,7 @@ test('enable caching for text files', async () => {
 test('disable caching for HTML and JSON', async () => {
   const sut = setupService({
     bucket: 'bucket-1',
-    directory: path.resolve(__dirname, '..', 'test', 'local-2'),
+    directory: path.resolve(__dirname, 'test', 'local-2'),
   });
   await sut.sync();
   expect(sut.s3.upload).toHaveBeenCalledWith(
@@ -177,15 +177,21 @@ test("delete files that don't exist locally when there are more than 1000 remote
     expect.any(Function)
   );
 
-  expect(deleteObjects.mock.calls[0][0].Delete.Objects.length).toEqual(1000);
-  expect(deleteObjects.mock.calls[1][0].Delete.Objects.length).toEqual(1000);
-  expect(deleteObjects.mock.calls[2][0].Delete.Objects.length).toEqual(1);
+  expect((deleteObjects.mock.calls[0][0] as any).Delete.Objects.length).toEqual(
+    1000
+  );
+  expect((deleteObjects.mock.calls[1][0] as any).Delete.Objects.length).toEqual(
+    1000
+  );
+  expect((deleteObjects.mock.calls[2][0] as any).Delete.Objects.length).toEqual(
+    1
+  );
 });
 
 test('only upload files in include option', async () => {
   const sut = setupService({
     bucket: 'bucket-1',
-    directory: path.resolve(__dirname, '..', 'test', 'local-2'),
+    directory: path.resolve(__dirname, 'test', 'local-2'),
     include: '\\.html$',
   });
   await sut.sync();
