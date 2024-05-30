@@ -29,7 +29,7 @@
   "dependencies": {
     "aws-sdk": "2.1630.0",
     "chalk": "5.3.0",
-    "commander": "10.0.1",
+    "commander": "12.1.0",
     "mime-types": "2.1.35",
     "p-limit": "4.0.0"
   },
@@ -38,10 +38,10 @@
     "@types/mime-types": "2.1.4",
     "@types/node": "20.12.13",
     "jest": "29.7.0",
-    "nodemon": "2.0.22",
+    "nodemon": "3.1.2",
     "ts-jest": "29.1.4",
     "ts-node": "10.9.2",
-    "typescript": "4.9.5"
+    "typescript": "5.4.5"
   },
   "publishConfig": {
     "access": "public"
