@@ -1,6 +1,6 @@
 {
   "name": "@neoskop/s3surgeon",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Sync your files to AWS S3 with surgical precision.",
   "main": "lib/index.js",
   "type": "module",
