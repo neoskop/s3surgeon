@@ -65,8 +65,10 @@ const s3surgeon = new S3Surgeon(options);
 
 s3surgeon.sync().catch((err) => {
   if (err instanceof S3Error) {
-    console.error(`There was a problem talking to S3: ${err.message}`);
+    console.error(`There was a problem talking to S3: ${err.message ?? err}`);
   } else {
-    console.error(`Syncing failed: ${err.message}`);
+    console.error(`Syncing failed: ${err.message ?? err}`);
   }
+
+  process.exit(1);
 });
