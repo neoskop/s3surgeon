@@ -5,7 +5,7 @@ import { S3Error } from './s3.error.js';
 import { S3Surgeon } from './s3surgeon.js';
 
 program
-  .version('2.1.3', '-v, --version')
+  .version('2.1.4', '-v, --version')
   .option('-k, --access-key-id <access-key-id>', 'AWS Access Key ID')
   .option(
     '-s, --secret-access-key <secret-access-key>',
