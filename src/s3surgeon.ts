@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import crypto from 'crypto';
 import * as fs from 'fs';
 import * as mimetypes from 'mime-types';
-import pLimit, { LimitFunction } from 'p-limit';
 import * as path from 'path';
 import { S3Error } from './s3.error.js';
 import { S3SurgeonOptions } from './s3surgeon-options.interface.js';
@@ -11,7 +10,6 @@ import { S3SurgeonOptions } from './s3surgeon-options.interface.js';
 export class S3Surgeon {
   public s3: AWS.S3;
   private includeRegex: RegExp | null = null;
-  private limit: LimitFunction;
 
   constructor(private readonly opts: S3SurgeonOptions) {
     const clientOpts: AWS.S3.Types.ClientConfiguration = {
@@ -32,7 +30,6 @@ export class S3Surgeon {
     }
 
     this.s3 = new AWS.S3(clientOpts);
-    this.limit = pLimit(10);
   }
 
   public async sync() {
@@ -167,16 +164,16 @@ export class S3Surgeon {
 
   private async uploadFiles(
     files: { key: string; hash: string }[]
-  ): Promise<void[]> {
-    try {
-      return Promise.all(
-        files.map((file) =>
-          this.limit(() => this.uploadFile(file.key, file.hash))
-        )
-      );
-    } catch (err: any) {
-      throw new S3Error(err.message);
+  ): Promise<void> {
+    const promises = [];
+    for (const file of files) {
+      promises.push(this.uploadFile(file.key, file.hash));
+      if (promises.length >= 10) {
+        await Promise.all(promises);
+        promises.length = 0;
+      }
     }
+    await Promise.all(promises);
   }
 
   private uploadFile(key: string, hash: string): Promise<void> {
@@ -293,15 +290,15 @@ export class S3Surgeon {
   private async getLocalFiles(
     directory: string
   ): Promise<{ key: string; hash: string }[]> {
-    const subdirs = await this.limit(() => fs.promises.readdir(directory));
+    const subdirs = await fs.promises.readdir(directory);
     const files = await Promise.all(
       subdirs.map(async (subdirectory: string) => {
         const res = path.resolve(directory, subdirectory);
-        return (await this.limit(() => fs.promises.stat(res))).isDirectory()
+        return (await fs.promises.stat(res)).isDirectory()
           ? this.getLocalFiles(res)
           : {
               key: res,
-              hash: await this.limit(() => this.getHashOfLocalFile(res)),
+              hash: await this.getHashOfLocalFile(res),
             };
       })
     );
